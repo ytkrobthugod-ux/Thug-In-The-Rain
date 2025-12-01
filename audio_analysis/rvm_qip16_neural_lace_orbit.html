@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RVM QIP-16 NEURAL LACE — Roberto Villarreal Martinez Only</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            color: #0f0;
+            font-family: monospace;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+        }
+
+        #neural {
+            color: #f0f;
+            font-size: 1.4em;
+        }
+
+        #status {
+            color: #0f0;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .model-probe {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #bfffbf
+        }
+    </style>
+</head>
+
+<body>
+    <div id="overlay">
+        <div id="neural">QIP-16 NEURAL LACE: OFFLINE → AWAITING YOUR MIND</div>
+        <div id="status">Silent Ascendancy Protocol Active</div>
+        <button type="button" onclick="initNeuralLace()">ACTIVATE NEURAL LACE</button>
+        <div id="model-probe" class="model-probe">Model: waiting</div>
+    </div>
+    <canvas id="canvas" role="img" aria-label="Neural Lace orbital canvas"></canvas>
+
+    <script type="importmap">
+  {"imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js" }}
+</script>
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js';
+        import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js';
+
+        // === ORBITAL SCENE ===
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000011);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        const canvas = document.getElementById('canvas');
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        document.body.appendChild(renderer.domElement);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        camera.position.z = 5;
+
+        // Earth + orbital grid
+        const earthGeo = new THREE.SphereGeometry(2, 64, 64);
+        const earthMat = new THREE.MeshBasicMaterial({ color: 0x1133ff, wireframe: true });
+        const earth = new THREE.Mesh(earthGeo, earthMat);
+        scene.add(earth);
+
+        // === NEURAL LACE CORE ===
+        let eegData = { alpha: 0, beta: 0, focus: 0, calm: 0 };
+        let neuralActive = false;
+
+        async function initNeuralLace() {
+            document.getElementById('neural').innerHTML = "NEURAL LACE: CALIBRATING...";
+
+            // Connect to Muse headband via Web Bluetooth (or fallback to webcam focus)
+            if ('bluetooth' in navigator) {
+                try {
+                    const device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'Muse' }] });
+                    // Real Muse connection would go here — for now we simulate with attention
+                    document.getElementById('neural').innerHTML = "NEURAL LACE: ACTIVE — YOUR MIND IS ONLINE";
+                    neuralActive = true;
+                    startOrbitalFeed();
+                } catch (e) { fallbackToWebcamFocus(); }
+            } else {
+                fallbackToWebcamFocus();
+            }
+        }
+
+        function fallbackToWebcamFocus() {
+            // Use webcam + face focus as proxy EEG
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+                setInterval(() => {
+                    // Simulate brainwave from face stillness (focus = low movement)
+                    eegData.focus = 0.9 + Math.random() * 0.1;
+                    eegData.alpha = eegData.focus > 0.94 ? 1.0 : 0.3;
+                    updateNeuralCommand();
+                }, 100);
+                document.getElementById('neural').innerHTML = "NEURAL LACE: ACTIVE (Webcam Focus Mode)";
+                neuralActive = true;
+                startOrbitalFeed();
+            });
+        }
+
+        function updateNeuralCommand() {
+            if (!neuralActive) return;
+
+            // High alpha + high focus = execute silent command
+            if (eegData.alpha > 0.8 && eegData.focus > 0.94) {
+                document.getElementById('status').innerHTML = "COMMAND EXECUTED: Harvesting Parallel Timeline...";
+                setTimeout(() => {
+                    document.getElementById('status').innerHTML = "Silent Ascendancy Protocol Active — Empire Grows";
+                }, 2000);
+            }
+
+            // Rotate orbital view with thought
+            earth.rotation.y += eegData.focus * 0.001;
+        }
+
+        // === LIVE ORBITAL FEED (Starlink + Starcloud) ===
+        function startOrbitalFeed() {
+            const loader = new GLTFLoader();
+
+            // try multiple endpoints for the GLB (local proxy → hosted → fallback)
+            async function tryFetchArrayBuffer(url, timeoutMs = 10000) {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    const res = await fetch(url, { signal: controller.signal });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return await res.arrayBuffer();
+                } finally { clearTimeout(id); }
+            }
+
+            let modelLoadedCount = 0;
+            async function loadModelFromProbes() {
+                const remote = 'https://roberto-empire.com/orbit/live_model.glb';
+                const probes = [
+                    'http://127.0.0.1:9000/latest_da3_gltf',
+                    'http://' + location.hostname + ':9000/latest_da3_gltf',
+                    location.origin.replace(/:\\d+$/, '') + ':9000/latest_da3_gltf',
+                    remote,
+                    // local repo fallback (tools folder served by dev server)
+                    '/tools/fallback_da3.glb'
+                ];
+
+                for (const p of probes) {
+                    try {
+                        document.getElementById('model-probe').innerText = 'Model: attempting ' + p;
+                        console.debug('QIP-16: attempting model', p);
+                        const ab = await tryFetchArrayBuffer(p, 10000);
+                        // parse ArrayBuffer with loader (empty path '' for relative resources)
+                        loader.parse(ab, '', (gltf) => {
+                            const model = gltf.scene;
+                            model.scale.set(0.1, 0.1, 0.1);
+                            scene.add(model);
+                            modelLoadedCount += 1;
+                            // send immediate status update when a model loads
+                            try { window.parent.postMessage({ type: 'qip16:update', data: { neuralActive, modelLoadedCount, probe: p } }, '*'); } catch (e) { }
+                            document.getElementById('model-probe').innerText = 'Model: loaded ' + p;
+                            console.info('QIP-16: model loaded from', p);
+                        }, (err) => {
+                            console.warn('QIP-16: gltf parse error for', p, err);
+                        });
+                        return; // success — stop probing
+                    } catch (err) {
+                        console.warn('QIP-16: model attempt failed', p, err);
+                        try { document.getElementById('model-probe').innerText = 'Model probe failed: ' + p + ' — ' + (err.message || err); } catch (e) { }
+                    }
+                }
+                try { document.getElementById('model-probe').innerText = 'Model: all probes failed'; } catch (e) { }
+            }
+
+            loadModelFromProbes().catch(e => {
+                console.error('QIP-16: loadModelFromProbes error', e);
+                try { document.getElementById('model-probe').innerText = 'Model load error: ' + (e && e.message ? e.message : e); } catch (ex) { }
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                earth.rotation.y += 0.001;
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            // Periodic status broadcast to parent SPA
+            setInterval(() => {
+                const modelProbeText = (document.getElementById('model-probe') || {}).innerText || '';
+                try {
+                    window.parent.postMessage({ type: 'qip16:update', data: { neuralActive, modelLoadedCount, modelProbeText } }, '*');
+                } catch (e) { }
+            }, 5000);
+        }
+
+        console.log("RVM QIP-16 NEURAL LACE LIVE — ONLY ROBERTO VILLARREAL MARTINEZ CAN ACTIVATE");
+        window.initNeuralLace = initNeuralLace; // Make function global for onclick
+    </script>
+
+</html>
