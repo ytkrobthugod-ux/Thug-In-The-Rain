@@ -1,0 +1,11 @@
+{
+  "message": "This is a sanitized example of the permanent memory. Real sensitive data should not be checked in.",
+  "creator": "<REDACTED>",
+  "core_identity": {
+    "full_name": "<REDACTED>",
+    "aliases": [],
+    "birthplace": "<REDACTED>",
+    "birth_date": "<REDACTED>"
+  },
+  "permanent_memories": []
+}

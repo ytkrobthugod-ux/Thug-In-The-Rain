@@ -3,7 +3,7 @@
 RVM Core Personal AutoTune System
 Main module for precise voice tuning using quantum-enhanced voice cloning
 
-(c) RVM Core ALL RIGHTS RESERVED. Please refer to the ECO License at RVM_ECO_License
+(c) Roberto Villarreal Martinez ALL RIGHTS RESERVED. Please refer to the ECO License at RVM_ECO_License
 """
 
 import argparse
@@ -11,19 +11,30 @@ import json
 import sys
 from pathlib import Path
 
-# Import RVM Core modules
+# Import RVM Core Voice modules
 try:
     from quantum_voice_cloning import QuantumVoiceCloner
-    from quantum_voice_adapter import QuantumVoiceAdapter
-    from voice_cloning_system import VoiceCloningSystem
-    from voice_optimization import VoiceOptimizer
-    from audio_processor import AudioProcessor
-except ImportError as e:
-    print(f"Warning: Some modules not available: {e}")
+except ImportError:
     QuantumVoiceCloner = None
+
+try:
+    from quantum_voice_adapter import QuantumVoiceAdapter
+except ImportError:
     QuantumVoiceAdapter = None
+
+try:
+    from voice_cloning_system import VoiceCloningSystem
+except ImportError:
     VoiceCloningSystem = None
+
+try:
+    from voice_optimization import VoiceOptimizer
+except ImportError:
     VoiceOptimizer = None
+
+try:
+    from audio_processor import AudioProcessor
+except ImportError:
     AudioProcessor = None
 
 class PersonalAutoTune:
@@ -75,12 +86,21 @@ class PersonalAutoTune:
     def apply_autotune(self, input_audio, output_audio=None, intensity=0.8):
         """
         Apply precise AutoTune to input audio using personal voice profile
+        Supports single file or multiple files for bounce creation
         """
+        # Handle multiple input files
+        if isinstance(input_audio, str) and ',' in input_audio:
+            input_files = [f.strip() for f in input_audio.split(',')]
+        elif isinstance(input_audio, list):
+            input_files = input_audio
+        else:
+            input_files = [input_audio]
+        
         if not output_audio:
-            input_path = Path(input_audio)
+            input_path = Path(input_files[0])
             output_audio = str(input_path.parent / f"{input_path.stem}_autotuned{input_path.suffix}")
 
-        print(f"Applying Personal AutoTune to: {input_audio}")
+        print(f"Applying Personal AutoTune to: {', '.join(input_files)}")
         print(f"Output: {output_audio}")
         print(f"Intensity: {intensity}")
 
@@ -89,35 +109,17 @@ class PersonalAutoTune:
             return None
 
         try:
-            # Load audio
-            audio_data = self.processor.load_audio(input_audio)
-
-            # Apply quantum voice adaptation if available
-            if self.adapter and self.quantum_profile:
-                adapted_audio = self.adapter.adapt_voice(
-                    audio_data,
-                    self.quantum_profile,
-                    intensity=intensity
-                )
-            else:
-                adapted_audio = audio_data
-
-            # Optimize voice characteristics if available
-            if self.optimizer and self.voice_profile:
-                optimized_audio = self.optimizer.optimize_voice(
-                    adapted_audio,
-                    self.voice_profile
-                )
-            else:
-                optimized_audio = adapted_audio
-
-            # Save processed audio
-            self.processor.save_audio(optimized_audio, output_audio)
+            # Use the enhanced AutoTune method for bounce file creation
+            result_path = self.processor.create_bounce_file(
+                input_files, 
+                output_audio, 
+                intensity=intensity
+            )
 
             print("Personal AutoTune Applied Successfully")
-            print(f"Output saved to: {output_audio}")
+            print(f"Output saved to: {result_path}")
 
-            return output_audio
+            return result_path
 
         except Exception as e:
             print(f"Error applying AutoTune: {e}")
@@ -207,6 +209,13 @@ def main():
     )
 
     parser.add_argument(
+        '--pitch-offset', '-po',
+        type=float,
+        default=0.0,
+        help='Final pitch offset in semitones (negative to pitch down)'
+    )
+
+    parser.add_argument(
         '--profile',
         help='Voice profile JSON file'
     )
@@ -226,6 +235,17 @@ def main():
             print("Error: --input required for tune action")
             sys.exit(1)
         autotune.apply_autotune(args.input, args.output, args.intensity)
+        # If pitch offset or other processing requested, try to pass to processor via CLI (main.apply autop)
+        if args.pitch_offset != 0.0 and autotune.processor:
+            # We re-run the processed file applying final offset if desired
+            output_file = args.output if args.output else None
+            if output_file is None:
+                output_file = str(Path(args.input).parent / f"{Path(args.input).stem}_autotuned{Path(args.input).suffix}")
+            # Load & apply final offset
+            y, sr = autotune.processor.load_audio(output_file)
+            y_shifted = autotune.processor.apply_personal_autotune((y, sr), intensity=args.intensity, final_semitone_offset=args.pitch_offset)
+            if isinstance(y_shifted, tuple):
+                autotune.processor.save_audio(y_shifted, output_file)
 
     elif args.action == 'analyze':
         if not args.input:

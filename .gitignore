@@ -1,0 +1,8 @@
+# Ignore secrets and sensitive files
+security/secrets/
+**/roberto_permanent_memory.json
+**/roberto_permanent_memory.json.enc
+
+# Ignore python cache
+__pycache__/
+.pytest_cache/
